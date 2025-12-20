@@ -269,7 +269,7 @@ void editorInsertRow(int at, char *s, size_t len) {
 void editorFreeRow(erow *row) {
     free(row->render);
     free(row->chars);
-    free(row->hl)
+    free(row->hl);
 }
 
 void editorDelRow(int at) {
