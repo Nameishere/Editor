@@ -6,17 +6,50 @@ static keyMapping normalKeys[30] = {
     {(int)'k', editorMoveCursorUp},
     {(int)'h', editorMoveCursorLeft},
     {(int)'l', editorMoveCursorRight},
-    {CTRL_KEY('q'), editorQuitApp}
+    {CTRL_KEY('q'), editorQuitApp},
+    {(int)'i', editorToInsertMode},
+    {ARROW_DOWN, editorMoveCursorDown},
+    {ARROW_UP, editorMoveCursorUp},
+    {ARROW_LEFT, editorMoveCursorLeft},
+    {ARROW_RIGHT, editorMoveCursorRight},
+    {(int)'H', editorMoveCursorScreenTop},
+    {(int)'M', editorMoveCursorScreenMiddle},
+    {(int)'L', editorMoveCursorScreenBottom},
+    {(int)'W', editorMoveCursorWordStartNP},
+    {(int)'w', editorMoveCursorWordStart},
+    {(int)'E', editorMoveCursorWordEndNP},
+    {(int)'e', editorMoveCursorWordEnd},
+    {(int)'B', editorMoveCursorLastWordStartNP},
+    {(int)'b', editorMoveCursorLastWordStart},
+
 };
 
 int normalKeysSize = sizeof(normalKeys) / sizeof(normalKeys[0]);
 
+static keyMapping insertKeys[30] = {
+    {ESC_KEY, editorToNormalMode},
+};
+
+int insertKeysSize = sizeof(insertKeys) / sizeof(insertKeys[0]);
+
 void editorProcessKeypress(OutputData* E){
     int c = editorReadKey();
-    for (int i = 0; i < normalKeysSize; i++) {
-        if (c == normalKeys[i].c) {
-            normalKeys[i].callback(c, E); 
-        }
+
+    switch (E->mode){
+        case MODE_NORMAL:
+            for (int i = 0; i < normalKeysSize; i++) {
+                if (c == normalKeys[i].c) {
+                    normalKeys[i].callback(c, E); 
+                }
+            }
+            break;
+        case MODE_INSERT:
+            for (int i = 0; i < insertKeysSize; i++) {
+                if (c == insertKeys[i].c) {
+                    insertKeys[i].callback(c, E); 
+                }
+            }
+            break;
     }
 }
 

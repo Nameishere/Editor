@@ -8,7 +8,14 @@
 #define ABUF_INIT {NULL,0}
 #define HL_HIGHLIGHT_NUMBERS (1 << 0)
 #define HL_HIGHLIGHT_STRINGS (1 << 1)
+#define STATUS_SIZE 2
 
+enum modes {
+    MODE_NORMAL = 0,
+    MODE_VISUAL,
+    MODE_INSERT,
+    MODE_NAVI,
+};
 
 enum editorHighlight {
     HL_NORMAL = 0,

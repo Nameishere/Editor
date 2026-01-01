@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -79,7 +80,7 @@ int editorReadKey(){
             }
         }
 
-        return '\x1b';
+        return ESC_KEY;
     } else {
         return c;
     }
@@ -91,6 +92,7 @@ void FixCursorPosition(OutputData *E) {
         E->cx = rowlen;
     }
 }
+
 
 int editorMoveCursorUp(int key, OutputData *E) {
     if ( E->cy != 0) {
@@ -144,6 +146,171 @@ int editorQuitApp(int key, OutputData *E) {
     write(STDOUT_FILENO, "\x1b[H", 3);
     exit(0);
     return 1;
+}
+
+int editorToInsertMode(int key, OutputData *E) {
+    E->mode = MODE_INSERT;
+}
+
+int editorToNormalMode(int key, OutputData *E) {
+    E->mode = MODE_NORMAL;
+}
+
+int editorMoveCursorScreenTop(int key, OutputData *E) {
+    E->cy = E->rowoff;
+    FixCursorPosition(E);
+}
+
+int editorMoveCursorScreenMiddle(int key, OutputData *E) {
+    E->cy = E->rowoff + (E->screenRows - STATUS_SIZE + 1)/2;
+    FixCursorPosition(E);
+}
+
+int editorMoveCursorScreenBottom(int key, OutputData *E) {
+    E->cy = E->rowoff + E->screenRows - STATUS_SIZE +  1;
+    FixCursorPosition(E);
+}
+
+int editorMoveCursorWordStartNP(int key, OutputData *E) {
+    char current;
+    bool foundSpace = false;
+    while (1) {
+        current = E->row[E->cy].chars[E->cx]; 
+        if ( current == ' ' || E->row[E->cy].size == E->cx) {
+            editorMoveCursorRight(32, E);
+            foundSpace = true;
+        } else if (foundSpace && current != ' ') {
+            return 1;
+        } else {
+            editorMoveCursorRight(32, E);
+        }
+    }
+}
+
+int editorMoveCursorWordStart(int key, OutputData *E) {
+    char lastChar = E->row[E->cy].chars[E->cx];
+    bool lastCharIsPunc = strchr(PUNCTUATION, lastChar) != NULL; 
+    bool newLine = E->row[E->cy].size == E->cx;
+    editorMoveCursorRight(32, E);
+    char currentChar = E->row[E->cy].chars[E->cx]; 
+    bool currentCharIsPunc = strchr(PUNCTUATION, currentChar) != NULL; 
+    while (1) {
+        if ((lastChar == ' ' || newLine) && currentChar != ' '){
+            return 1;
+        } else if (lastCharIsPunc && !currentCharIsPunc && currentChar != ' ') {
+            return 1;
+        } else if (!lastCharIsPunc && currentCharIsPunc && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else {
+            lastChar = currentChar;
+            lastCharIsPunc = currentCharIsPunc; 
+            newLine = E->row[E->cy].rsize == E->cx;
+            editorMoveCursorRight(32, E);
+            currentChar = E->row[E->cy].chars[E->cx]; 
+            currentCharIsPunc = strchr(PUNCTUATION, currentChar) != NULL; 
+        }
+
+    }
+}
+
+int editorMoveCursorWordEndNP(int key, OutputData *E) {
+    char nextChar;
+    char currentChar;
+    bool newLine;
+    editorMoveCursorRight(32, E);
+    while (1) {
+        currentChar = E->row[E->cy].chars[E->cx];
+        if (E->cx < E->row[E->cy].size) {
+            nextChar = E->row[E->cy].chars[E->cx + 1];
+        } else if (E->cx == E->row[E->cy].size) {
+            nextChar = E->row[E->cy + 1].chars[0];
+        }
+
+        if ((nextChar== ' ' || nextChar== '\0') && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else {
+            editorMoveCursorRight(32, E);
+        }
+    }
+}
+
+int editorMoveCursorWordEnd(int key, OutputData *E) {
+    char nextChar;
+    char currentChar;
+    bool nextCharIsPunc;
+    bool currentCharIsPunc;
+    bool newLine;
+    editorMoveCursorRight(32, E);
+    while (1) {
+        currentChar = E->row[E->cy].chars[E->cx];
+        currentCharIsPunc = strchr(PUNCTUATION, currentChar) != NULL;
+        if (E->cx < E->row[E->cy].size) {
+            nextChar = E->row[E->cy].chars[E->cx + 1];
+        } else if (E->cx == E->row[E->cy].size) {
+            nextChar = E->row[E->cy + 1].chars[0];
+        }
+        nextCharIsPunc = strchr(PUNCTUATION, nextChar) != NULL;
+
+        if ((nextChar== ' ' || nextChar== '\0') && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else if (nextCharIsPunc && !currentCharIsPunc && currentChar != ' ') {
+            return 1;
+        } else if (!nextCharIsPunc && currentCharIsPunc && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else {
+            editorMoveCursorRight(32, E);
+        }
+    }
+}
+
+int editorMoveCursorLastWordStartNP(int key, OutputData *E) {
+    char nextChar;
+    char currentChar;
+    bool newLine;
+    editorMoveCursorLeft(32, E);
+    while (1) {
+        currentChar = E->row[E->cy].chars[E->cx];
+        if (E->cx > 0) {
+            nextChar = E->row[E->cy].chars[E->cx - 1];
+        } else if (E->cx == 0) {
+            nextChar = E->row[E->cy - 1].chars[E->row[E->cy - 1].size];
+        }
+
+        if ((nextChar== ' ' || nextChar== '\0') && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else {
+            editorMoveCursorLeft(32, E);
+        }
+    }
+}
+
+int editorMoveCursorLastWordStart(int key, OutputData *E) {
+    char nextChar;
+    char currentChar;
+    bool nextCharIsPunc;
+    bool currentCharIsPunc;
+    bool newLine;
+    editorMoveCursorLeft(32, E);
+    while (1) {
+        currentChar = E->row[E->cy].chars[E->cx];
+        currentCharIsPunc = strchr(PUNCTUATION, currentChar) != NULL;
+        if (E->cx > 0) {
+            nextChar = E->row[E->cy].chars[E->cx - 1];
+        } else if (E->cx == 0) {
+            nextChar = E->row[E->cy - 1].chars[E->row[E->cy - 1].size];
+        }
+        nextCharIsPunc = strchr(PUNCTUATION, nextChar) != NULL;
+
+        if ((nextChar== ' ' || nextChar== '\0') && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else if (nextCharIsPunc && !currentCharIsPunc && currentChar != ' ') {
+            return 1;
+        } else if (!nextCharIsPunc && currentCharIsPunc && currentChar != ' ' && currentChar != '\0') {
+            return 1;
+        } else {
+            editorMoveCursorLeft(32, E);
+        }
+    }
 }
 // char *editorPrompt(char *prompt, void (*callback)(char *, int, OutputData *), OutputData * E) {
 //     size_t bufsize = 128;

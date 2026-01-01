@@ -173,12 +173,26 @@ void editorDrawRows(struct abuf *ab, OutputData *E) {
     }
 }
 
+const char * const MODE_NAMES[] ={
+    "NORMAL",
+    "VISUAL",
+    "INSERT",
+    "NAVIGATION",
+};
+
+
 void editorDrawStatusBar(struct abuf *ab, OutputData *E ) {
     abAppend(ab, "\x1b[7m", 4); // Swaps to Inverted Colors
     char status[80], rstatus[80];
-    int len = snprintf(status, sizeof(status), "%.20s - %d lines %s",
-        E->filename ? E->filename : "[No Name]", E->numrows, 
-        E->dirty ? "(changed)" : "");
+    char modeName[5];
+
+
+
+    int len = snprintf(status, sizeof(status), "%.20s - %d lines %s --%s--",
+        E->filename ? E->filename : "[No Name]",
+        E->numrows, 
+        E->dirty ? "(changed)" : "",
+        MODE_NAMES[E->mode]);
     int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
         E->syntax ? E->syntax->filetype : "no ft", E->cy + 1, E->numrows);
     if (len > E->screenCols) len = E->screenCols;

@@ -25,16 +25,6 @@
 
 #define MAD_INC_EDITOR_VERSION "0.0.1"
 
-
-
-enum modes {
-    MODE_NORMAL,
-    MODE_VISUAL,
-    MODE_INSERT,
-    MODE_NAVI,
-};
-
-
 /* data */
 
 
