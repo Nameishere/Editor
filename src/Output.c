@@ -1,3 +1,8 @@
+// this file adds the data to the terminal 
+// - Including the syntax
+// - cursor position and shape
+// - status of the editor 
+// - text data  
 #include "../include/Output.h"
 
 #include <ctype.h>
@@ -224,8 +229,8 @@ void editorRefreshScreen(OutputData * E){
 
     struct abuf ab = ABUF_INIT;
 
-    abAppend(&ab, "\x1b[?25l", 6);
-    abAppend(&ab, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[?25l", 6); // Hide Cursor
+    abAppend(&ab, "\x1b[H", 3); // Position Cursor to Top-Left
 
     editorDrawRows(&ab, E);
     editorDrawStatusBar(&ab, E);
@@ -233,9 +238,10 @@ void editorRefreshScreen(OutputData * E){
 
     char buf[32];
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E->cy - E->rowoff) + 1,(E->rx - E->coloff) + 1);
-    abAppend(&ab, buf, strlen(buf));
+    abAppend(&ab, buf, strlen(buf)); // Position Cursor
 
-    abAppend(&ab, "\x1b[?25h", 6);
+    abAppend(&ab, "\x1b[?25h", 6); // Show Cursor
+    // abAppend(&ab, "\x1b[6 q", 6); // Show Cursor
     
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);

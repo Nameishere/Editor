@@ -41,5 +41,6 @@ int editorMoveCursorWordEndNP(int key, OutputData *E);
 int editorMoveCursorWordEnd(int key, OutputData *E);
 int editorMoveCursorLastWordStartNP(int key, OutputData *E);
 int editorMoveCursorLastWordStart(int key, OutputData *E);
+int doNothing(int key, OutputData *E);
 
 #endif

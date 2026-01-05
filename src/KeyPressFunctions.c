@@ -312,6 +312,10 @@ int editorMoveCursorLastWordStart(int key, OutputData *E) {
         }
     }
 }
+
+int doNothing(int key, OutputData *E) {
+    return 1;
+}
 // char *editorPrompt(char *prompt, void (*callback)(char *, int, OutputData *), OutputData * E) {
 //     size_t bufsize = 128;
 //     char *buf = malloc(bufsize);

@@ -1,7 +1,7 @@
 #include "../include/KeyProcess.h"
 #include "../include/KeyPressFunctions.h"
 
-static keyMapping normalKeys[30] = {
+static keyMapping normalKeys[] = {
     {(int)'j', editorMoveCursorDown},
     {(int)'k', editorMoveCursorUp},
     {(int)'h', editorMoveCursorLeft},
@@ -28,6 +28,9 @@ int normalKeysSize = sizeof(normalKeys) / sizeof(normalKeys[0]);
 
 static keyMapping insertKeys[30] = {
     {ESC_KEY, editorToNormalMode},
+    {CTRL_KEY('q'), editorQuitApp},
+    // {(int)'\r', editorInsertNewLine},
+    {HOME_KEY, doNothing},
 };
 
 int insertKeysSize = sizeof(insertKeys) / sizeof(insertKeys[0]);
@@ -40,6 +43,7 @@ void editorProcessKeypress(OutputData* E){
             for (int i = 0; i < normalKeysSize; i++) {
                 if (c == normalKeys[i].c) {
                     normalKeys[i].callback(c, E); 
+                    break;
                 }
             }
             break;
@@ -47,8 +51,10 @@ void editorProcessKeypress(OutputData* E){
             for (int i = 0; i < insertKeysSize; i++) {
                 if (c == insertKeys[i].c) {
                     insertKeys[i].callback(c, E); 
+                    break;
                 }
             }
+            
             break;
     }
 }
