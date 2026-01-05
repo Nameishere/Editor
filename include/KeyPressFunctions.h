@@ -1,7 +1,7 @@
 #ifndef KEYPRESSFUNCTIONS_H
 #define KEYPRESSFUNCTIONS_H
 
-#include "../include/Output.h"
+#include "../include/Display.h"
 #define CTRL_KEY(k) ((k) & 0x1f)    
 
 #define PUNCTUATION "!@#$%^&*()[]{}>?/.,<'\""

@@ -4,7 +4,7 @@
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 
-#include "../include/Output.h"
+#include "../include/Display.h"
 
 #include <ctype.h>
 #include <dirent.h>

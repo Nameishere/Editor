@@ -1,5 +1,5 @@
-#ifndef OUTPUT_H
-#define OUTPUT_H
+#ifndef DISPLAY_H
+#define DISPLAY_H
 
 #include <time.h>
 

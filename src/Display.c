@@ -3,7 +3,7 @@
 // - cursor position and shape
 // - status of the editor 
 // - text data  
-#include "../include/Output.h"
+#include "../include/Display.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -225,7 +225,7 @@ void editorDrawMessageBar(struct abuf *ab, OutputData * E) {
 
 
 void editorRefreshScreen(OutputData * E){
-    editorScroll(E);
+    editorScroll(E); // Determines the portion of the File to Show basedon cursor movement 
 
     struct abuf ab = ABUF_INIT;
 
@@ -233,7 +233,7 @@ void editorRefreshScreen(OutputData * E){
     abAppend(&ab, "\x1b[H", 3); // Position Cursor to Top-Left
 
     editorDrawRows(&ab, E);
-    editorDrawStatusBar(&ab, E);
+    editorDrawStatusBar(&ab, E); 
     editorDrawMessageBar(&ab, E);
 
     char buf[32];
@@ -241,7 +241,7 @@ void editorRefreshScreen(OutputData * E){
     abAppend(&ab, buf, strlen(buf)); // Position Cursor
 
     abAppend(&ab, "\x1b[?25h", 6); // Show Cursor
-    // abAppend(&ab, "\x1b[6 q", 6); // Show Cursor
+    abAppend(&ab, "\x1b[6 q", 6); // Sets Cursor to a Line 
     
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);

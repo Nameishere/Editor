@@ -1,7 +1,7 @@
 #ifndef KEYPROCESS_H
 #define KEYPROCESS_H
 
-#include "../include/Output.h"
+#include "../include/Display.h"
 
 typedef struct keyMapping {
     int c;
