@@ -2,20 +2,12 @@
 #define DISPLAY_H
 
 #include <time.h>
+#include "StateMachine.h"
 
-#define TAB_STOP 8
 #define WELCOME_MESSAGE "Welcome to the world of the mad"
 #define ABUF_INIT {NULL,0}
 #define HL_HIGHLIGHT_NUMBERS (1 << 0)
 #define HL_HIGHLIGHT_STRINGS (1 << 1)
-#define STATUS_SIZE 2
-
-enum modes {
-    MODE_NORMAL = 0,
-    MODE_VISUAL,
-    MODE_INSERT,
-    MODE_NAVI,
-};
 
 enum editorHighlight {
     HL_NORMAL = 0,
@@ -28,15 +20,6 @@ enum editorHighlight {
     HL_MATCH
 };
 
-typedef struct erow {
-    int idx;
-    int size;
-    int rsize;
-    char *chars; 
-    char *render; 
-    unsigned char *hl;
-    int hl_open_comment;
-} erow;
 
 struct editorSyntax {
     char *filetype;
@@ -48,32 +31,6 @@ struct editorSyntax {
     int flags;
 };
 
-typedef struct OutputData {
-    int mode;
-
-    int rx;
-    int cx;
-    int cy;
-
-    int numrows;
-    int rowoff;
-    int screenRows;
-
-    int coloff;
-    int screenCols;
-
-    char * filename;
-    erow *row;
-
-    int dirty;
-
-    struct editorSyntax *syntax;
-    char statusmsg[80];
-    time_t statusmsg_time;
-
-
-} OutputData;
-
 
 struct abuf {
     char *b;
@@ -81,14 +38,10 @@ struct abuf {
 };
 
 
-void editorSelectSyntaxHighlight(OutputData *E);
+void editorSelectSyntaxHighlight(StateMachine *E);
 
-void editorUpdateSyntax(erow* row, OutputData *E);
+void editorUpdateSyntax(erow* row, StateMachine *E);
 
-void editorSetStatusMessage(OutputData *E, const char *fmt, ...);
-
-void editorRefreshScreen(OutputData *E);
-
-void die(const char*s);
+void editorRefreshScreen(StateMachine *E);
 
 #endif

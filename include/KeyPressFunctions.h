@@ -1,10 +1,11 @@
 #ifndef KEYPRESSFUNCTIONS_H
 #define KEYPRESSFUNCTIONS_H
 
-#include "../include/Display.h"
+#include "../include/StateMachine.h"
 #define CTRL_KEY(k) ((k) & 0x1f)    
 
 #define PUNCTUATION "!@#$%^&*()[]{}>?/.,<'\""
+#define STATUS_SIZE 2
 
 #define QUIT_TIMES 2
 enum editorKey {
@@ -23,24 +24,24 @@ enum editorKey {
 
 
 int editorReadKey();
-
-
-int editorMoveCursorUp(int key, OutputData *E);
-int editorMoveCursorDown(int key, OutputData *E);
-int editorMoveCursorLeft(int key, OutputData *E);
-int editorMoveCursorRight(int key, OutputData *E);
-int editorQuitApp(int key, OutputData *E);
-int editorToNormalMode(int key, OutputData *E);
-int editorToInsertMode(int key, OutputData *E);
-int editorMoveCursorScreenTop(int key, OutputData *E);
-int editorMoveCursorScreenMiddle(int key, OutputData *E);
-int editorMoveCursorScreenBottom(int key, OutputData *E);
-int editorMoveCursorWordStartNP(int key, OutputData *E);
-int editorMoveCursorWordStart(int key, OutputData *E);
-int editorMoveCursorWordEndNP(int key, OutputData *E);
-int editorMoveCursorWordEnd(int key, OutputData *E);
-int editorMoveCursorLastWordStartNP(int key, OutputData *E);
-int editorMoveCursorLastWordStart(int key, OutputData *E);
-int doNothing(int key, OutputData *E);
+int editorMoveCursorUp(int key, StateMachine *E);
+int editorMoveCursorDown(int key, StateMachine *E);
+int editorMoveCursorLeft(int key, StateMachine *E);
+int editorMoveCursorRight(int key, StateMachine *E);
+int editorQuitApp(int key, StateMachine *E);
+int editorToNormalMode(int key, StateMachine *E);
+int editorToInsertMode(int key, StateMachine *E);
+int editorMoveCursorScreenTop(int key, StateMachine *E);
+int editorMoveCursorScreenMiddle(int key, StateMachine *E);
+int editorMoveCursorScreenBottom(int key, StateMachine *E);
+int editorMoveCursorWordStartNP(int key, StateMachine *E);
+int editorMoveCursorWordStart(int key, StateMachine *E);
+int editorMoveCursorWordEndNP(int key, StateMachine *E);
+int editorMoveCursorWordEnd(int key, StateMachine *E);
+int editorMoveCursorLastWordStartNP(int key, StateMachine *E);
+int editorMoveCursorLastWordStart(int key, StateMachine *E);
+int doNothing(int key, StateMachine *E);
+int editorInsertNewLine(int key, StateMachine *E);
+int editorInsertChar(int key, StateMachine *E);
 
 #endif

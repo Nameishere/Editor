@@ -1,7 +1,7 @@
 // This file contains all the functions that can be actibated by keypresses or by running 
 // them in the command line 
 
-// callback function format = int func(int c, OutputData E);
+// callback function format = int func(int c, StateMachine E);
 #include "../include/KeyPressFunctions.h"
 
 #include <ctype.h>
@@ -14,10 +14,10 @@
 #include <string.h>
 #include <unistd.h>
 
-char *editorRowsToString(int *buflen, OutputData *E) {
+char *editorRowsToString(int *buflen, StateMachine *E) {
     int totlen = 0;
     int j;
-    for (j = 0; j < E->numrows; j++) {
+    for (j = 0; j < E->numRows; j++) {
         totlen += E->row[j].size + 1;
     }
 
@@ -25,22 +25,20 @@ char *editorRowsToString(int *buflen, OutputData *E) {
 
     char* buf = malloc(totlen);
     char*p = buf;
-    for (j = 0; j < E->numrows; j++) {
+    for (j = 0; j < E->numRows; j++) {
         memcpy(p, E->row[j].chars, E->row[j].size);
         p += E->row[j].size;
         *p = '\n';
         p++;
     }
-
     return buf;
 }
-
 
 int editorReadKey(){
     int nread; 
     char c;
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1 ) {
-        if (nread == -1 && errno != EAGAIN) die("read");
+        //if (nread == -1 && errno != EAGAIN) die("read");
     }
 
     if (c == '\x1b') {
@@ -85,8 +83,8 @@ int editorReadKey(){
         return c;
     }
 }
-void FixCursorPosition(OutputData *E) {
-    erow *row = E->cy >= E->numrows ? NULL : & E->row[E->cy];
+void FixCursorPosition(StateMachine *E) {
+    erow *row = E->cy >= E->numRows ? NULL : & E->row[E->cy];
     int rowlen = row ? row->size : 0;
     if (E->cx > rowlen) {
         E->cx = rowlen;
@@ -94,7 +92,7 @@ void FixCursorPosition(OutputData *E) {
 }
 
 
-int editorMoveCursorUp(int key, OutputData *E) {
+int editorMoveCursorUp(int key, StateMachine *E) {
     if ( E->cy != 0) {
         E->cy--;
     }
@@ -102,17 +100,17 @@ int editorMoveCursorUp(int key, OutputData *E) {
     return 1;
 }
 
-int editorMoveCursorDown(int key, OutputData *E) {
-    if (E->cy < E->numrows) {
+int editorMoveCursorDown(int key, StateMachine *E) {
+    if (E->cy < E->numRows) {
         E->cy++;
-    }else if (E->rowoff < E->numrows){
-        E->rowoff ++;
+    }else if (E->rowOff < E->numRows){
+        E->rowOff ++;
     }
     FixCursorPosition(E);
     return 1;
 }
 
-int editorMoveCursorLeft(int key, OutputData *E) {
+int editorMoveCursorLeft(int key, StateMachine *E) {
     if ( E->cx != 0) {
         E->cx--;
     } else if (E->cy > 0 ) {
@@ -122,8 +120,8 @@ int editorMoveCursorLeft(int key, OutputData *E) {
     return 1;
 }
 
-int editorMoveCursorRight(int key, OutputData *E) {
-    erow *row = E->cy >= E->numrows ? NULL : &E->row[E->cy];
+int editorMoveCursorRight(int key, StateMachine *E) {
+    erow *row = E->cy >= E->numRows ? NULL : &E->row[E->cy];
     if (row && E->cx < row->size) {
         E->cx++;
     } else if (row && E->cx == row->size) {
@@ -134,7 +132,7 @@ int editorMoveCursorRight(int key, OutputData *E) {
     return 1;
 }
 
-int editorQuitApp(int key, OutputData *E) {
+int editorQuitApp(int key, StateMachine *E) {
     static int quit_times = QUIT_TIMES;
     if (E->dirty && quit_times > 0) {
         editorSetStatusMessage(E, "WARNING !!! File has unsaved changes. "
@@ -148,30 +146,30 @@ int editorQuitApp(int key, OutputData *E) {
     return 1;
 }
 
-int editorToInsertMode(int key, OutputData *E) {
+int editorToInsertMode(int key, StateMachine *E) {
     E->mode = MODE_INSERT;
 }
 
-int editorToNormalMode(int key, OutputData *E) {
+int editorToNormalMode(int key, StateMachine *E) {
     E->mode = MODE_NORMAL;
 }
 
-int editorMoveCursorScreenTop(int key, OutputData *E) {
-    E->cy = E->rowoff;
+int editorMoveCursorScreenTop(int key, StateMachine *E) {
+    E->cy = E->rowOff;
     FixCursorPosition(E);
 }
 
-int editorMoveCursorScreenMiddle(int key, OutputData *E) {
-    E->cy = E->rowoff + (E->screenRows - STATUS_SIZE + 1)/2;
+int editorMoveCursorScreenMiddle(int key, StateMachine *E) {
+    E->cy = E->rowOff + (E->screenRows - STATUS_SIZE + 1)/2;
     FixCursorPosition(E);
 }
 
-int editorMoveCursorScreenBottom(int key, OutputData *E) {
-    E->cy = E->rowoff + E->screenRows - STATUS_SIZE +  1;
+int editorMoveCursorScreenBottom(int key, StateMachine *E) {
+    E->cy = E->rowOff + E->screenRows - STATUS_SIZE +  1;
     FixCursorPosition(E);
 }
 
-int editorMoveCursorWordStartNP(int key, OutputData *E) {
+int editorMoveCursorWordStartNP(int key, StateMachine *E) {
     char current;
     bool foundSpace = false;
     while (1) {
@@ -187,7 +185,7 @@ int editorMoveCursorWordStartNP(int key, OutputData *E) {
     }
 }
 
-int editorMoveCursorWordStart(int key, OutputData *E) {
+int editorMoveCursorWordStart(int key, StateMachine *E) {
     char lastChar = E->row[E->cy].chars[E->cx];
     bool lastCharIsPunc = strchr(PUNCTUATION, lastChar) != NULL; 
     bool newLine = E->row[E->cy].size == E->cx;
@@ -213,7 +211,7 @@ int editorMoveCursorWordStart(int key, OutputData *E) {
     }
 }
 
-int editorMoveCursorWordEndNP(int key, OutputData *E) {
+int editorMoveCursorWordEndNP(int key, StateMachine *E) {
     char nextChar;
     char currentChar;
     bool newLine;
@@ -234,7 +232,7 @@ int editorMoveCursorWordEndNP(int key, OutputData *E) {
     }
 }
 
-int editorMoveCursorWordEnd(int key, OutputData *E) {
+int editorMoveCursorWordEnd(int key, StateMachine *E) {
     char nextChar;
     char currentChar;
     bool nextCharIsPunc;
@@ -263,7 +261,7 @@ int editorMoveCursorWordEnd(int key, OutputData *E) {
     }
 }
 
-int editorMoveCursorLastWordStartNP(int key, OutputData *E) {
+int editorMoveCursorLastWordStartNP(int key, StateMachine *E) {
     char nextChar;
     char currentChar;
     bool newLine;
@@ -284,7 +282,7 @@ int editorMoveCursorLastWordStartNP(int key, OutputData *E) {
     }
 }
 
-int editorMoveCursorLastWordStart(int key, OutputData *E) {
+int editorMoveCursorLastWordStart(int key, StateMachine *E) {
     char nextChar;
     char currentChar;
     bool nextCharIsPunc;
@@ -313,20 +311,20 @@ int editorMoveCursorLastWordStart(int key, OutputData *E) {
     }
 }
 
-int doNothing(int key, OutputData *E) {
+int doNothing(int key, StateMachine *E) {
     return 1;
 }
-// char *editorPrompt(char *prompt, void (*callback)(char *, int, OutputData *), OutputData * E) {
+//char *editorPrompt(char *prompt, void (*callback)(char *, int, StateMachine *), StateMachine * E) {
 //     size_t bufsize = 128;
 //     char *buf = malloc(bufsize);
-
+//
 //     size_t buflen =0;
 //     buf[0] = '\0';
-
+//
 //     while (1) {
 //         editorSetStatusMessage(E, prompt, buf);
 //         editorRefreshScreen(E);
-
+//
 //         int c = editorReadKey();
 //         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
 //             if (buflen != 0 ) buf[--buflen] = '\0';
@@ -349,37 +347,37 @@ int doNothing(int key, OutputData *E) {
 //             buf[buflen++] = c;
 //             buf[buflen] = '\0';
 //         }
-
+//
 //         if (callback) callback(buf, c, E);
 //     }
-// }
+//}
 
-// int editorRowRxToCx(erow *row, int rx) {
-//     int cur_rx = 0;
-//     int cx;
-//     for (cx = 0; cx < row->size; cx++) {
-//         if (row ->chars[cx] == '\t')
-//             cur_rx += (TAB_STOP - 1) - (cur_rx % TAB_STOP);
-//         cur_rx ++;
+ int editorRowRxToCx(erow *row, int rx) {
+     int cur_rx = 0;
+     int cx;
+     for (cx = 0; cx < row->size; cx++) {
+         if (row ->chars[cx] == '\t')
+             cur_rx += (TAB_STOP - 1) - (cur_rx % TAB_STOP);
+         cur_rx ++;
 
-//         if (cur_rx > rx) return cx;
-//     }
-//     return cx;
-// }
+         if (cur_rx > rx) return cx;
+     }
+     return cx;
+ }
 
-// void editorFindCallback(char * query, int key, OutputData *E) {
+//void editorFindCallback(char * query, int key, StateMachine *E) {
 //     static int last_match = -1;
 //     static int direction = 1;
-
+//
 //     static int saved_hl_line;
 //     static char *saved_hl = NULL;
-
+//
 //     if (saved_hl) {
 //         memcpy(E->row[saved_hl_line].hl, saved_hl, E->row[saved_hl_line].rsize);
 //         free(saved_hl);
 //         saved_hl = NULL;
 //     }
-
+//
 //     if (key == '\r' || key == '\x1b') {
 //         last_match = -1;
 //         direction = 1;
@@ -392,23 +390,23 @@ int doNothing(int key, OutputData *E) {
 //         last_match = -1;
 //         direction = 1;
 //     }
-
+//
 //     if (last_match == -1) direction = 1;
 //     int current = last_match;
 //     int i; 
-//     for (i = 0; i < E->numrows; i++) {
+//     for (i = 0; i < E->numRows; i++) {
 //         current += direction;
-//         if (current == -1) current = E->numrows - 1;
-//         else if (current == E->numrows) current = 0;
-
+//         if (current == -1) current = E->numRows - 1;
+//         else if (current == E->numRows) current = 0;
+//
 //         erow * row = &E->row[current];
 //         char * match = strstr(row->render, query);
 //         if (match) {
 //             last_match = current;
 //             E->cy = current;
 //             E->cx = editorRowRxToCx(row,match- row->render); 
-//             E->rowoff =E->numrows;
-
+//             E->rowOff =E->numRows;
+//
 //             saved_hl_line = current;
 //             saved_hl = malloc(row->rsize);
 //             memcpy(saved_hl, row->hl, row->rsize);
@@ -416,14 +414,14 @@ int doNothing(int key, OutputData *E) {
 //             break;
 //         }
 //     }
-// }
+//}
 
-// int editorFind(int key, OutputData * E) {
+//int editorFind(int key, StateMachine * E) {
 //     int saved_cx = E->cx;
 //     int saved_cy = E->cy;
 //     int saved_coloff = E->coloff;
-//     int savedcol_rowoff = E->rowoff;
-
+//     int savedcol_rowoff = E->rowOff;
+//
 //     char * query = editorPrompt("Search: %s (ESC/Arrows/Enter)", editorFindCallback, E);
 //     if (query) {
 //         free(query);
@@ -431,17 +429,17 @@ int doNothing(int key, OutputData *E) {
 //     E->cx =      saved_cx;
 //     E->cy =      saved_cy;
 //     E->coloff =  saved_coloff;
-//     E->rowoff =  savedcol_rowoff;
+//     E->rowOff =  savedcol_rowoff;
 //     }
 //     return 1;
-// }
+//}
 
 
 
 
 
 
-// void editorSave(OutputData *E) {
+//void editorSave(StateMachine *E) {
 //     if ( E->filename == NULL)  {
 //         E->filename = editorPrompt("Save as: %s (ESC to cancel)", NULL, E);
 //         if (E->filename == NULL) {
@@ -450,10 +448,10 @@ int doNothing(int key, OutputData *E) {
 //         }
 //         editorSelectSyntaxHighlight(E);
 //     }
-
+//
 //     int len; 
 //     char *buf = editorRowsToString (&len, E);
-
+//
 //     int fd = open(E->filename, O_RDWR | O_CREAT, 0644);
 //     if (fd != -1) {
 //         if (ftruncate(fd, len) != -1) {
@@ -469,100 +467,97 @@ int doNothing(int key, OutputData *E) {
 //         }
 //         close(fd);
 //     }
-
+//
 //     free(buf);
 //     char str[24];
 //     sprintf(str, "Can't save! I/O error: %s", strerror(errno));
 //     editorSetStatusMessage(E, str);
-// }
+//}
 
+//void editorRowDelChar(erow * row, int at, StateMachine *E) {  
+//    if (at < 0 || at > row->size) return;
+//    memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
+//    row->size--;
+//    editorUpdateRow(row, E);
+//    E->dirty ++;
+//}
+//
+//void editorRowAppendString(erow *row, char *s, size_t len, StateMachine *E) {
+//    row->chars = realloc(row->chars, row->size + len + 1);
+//    memcpy(&row->chars[row->size], s, len);
+//    row->size += len;
+//    row->chars[row->size] = '\0';
+//    editorUpdateRow(row, E);
+//    E->dirty++;
+//}
 
-// void editorRowDelChar(erow * row, int at, OutputData *E) {  
-//     if (at < 0 || at > row->size) return;
-//     memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
-//     row->size--;
-//     editorUpdateRow(row, E);
-//     E->dirty ++;
-// }
+//void editorFreeRow(erow *row) {
+//    free(row->render);
+//    free(row->chars);
+//    free(row->hl);
+//}
+//
+//void editorDelRow(int at, StateMachine *E) {
+//    if (at < 0 || at >= E->numRows) return;
+//    editorFreeRow(&E->row[at]);
+//    memmove(&E->row[at], &E->row[at + 1], sizeof(erow) * (E->numRows - at -1));
+//    for (int j = at; j < E->numRows - 1; j++) E->row[j].idx--;
+//    E->numRows--;
+//    E->dirty++;
+//}
+//
+//void editorDelChar(StateMachine *E ) {
+//    if (E->cy == E->numRows) { 
+//        return;
+//    }
+//    if (E->cx ==0 && E->cy ==0) return;
+//
+//    erow *row = &E->row[E->cy];
+//    if (E->cx > 0 ) {
+//        editorRowDelChar(row, E->cx -1, E);
+//        E->cx --;
+//    } else {
+//        E->cx = E->row[E->cy - 1].size;
+//        editorRowAppendString(&E->row[E->cy - 1], row->chars, row->size, E);
+//        editorDelRow(E->cy, E);
+//        E->cy--;
+//
+//    }
+//}
 
-// void editorRowAppendString(erow *row, char *s, size_t len, OutputData *E) {
-//     row->chars = realloc(row->chars, row->size + len + 1);
-//     memcpy(&row->chars[row->size], s, len);
-//     row->size += len;
-//     row->chars[row->size] = '\0';
-//     editorUpdateRow(row, E);
-//     E->dirty++;
-// }
-
-// void editorFreeRow(erow *row) {
-//     free(row->render);
-//     free(row->chars);
-//     free(row->hl);
-// }
-
-// void editorDelRow(int at, OutputData *E) {
-//     if (at < 0 || at >= E->numrows) return;
-//     editorFreeRow(&E->row[at]);
-//     memmove(&E->row[at], &E->row[at + 1], sizeof(erow) * (E->numrows - at -1));
-//     for (int j = at; j < E->numrows - 1; j++) E->row[j].idx--;
-//     E->numrows--;
-//     E->dirty++;
-// }
-
-// void editorDelChar(OutputData *E ) {
-//     if (E->cy == E->numrows) { 
-//         return;
-//     }
-//     if (E->cx ==0 && E->cy ==0) return;
-
-//     erow *row = &E->row[E->cy];
-//     if (E->cx > 0 ) {
-//         editorRowDelChar(row, E->cx -1, E);
-//         E->cx --;
-//     } else {
-//         E->cx = E->row[E->cy - 1].size;
-//         editorRowAppendString(&E->row[E->cy - 1], row->chars, row->size, E);
-//         editorDelRow(E->cy, E);
-//         E->cy--;
-
-//     }
-// }
-
-
-
-
-// void editorRowInsertChar(erow *row, int at, int c, OutputData *E) {
-//     if (at < 0 || at > row->size) at = row->size;
-//     row->chars = realloc(row->chars, row->size + 2);
-//     memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
-//     row->size++;
-//     row->chars[at] = c;
-//     editorUpdateRow(row, E);
-//     E->dirty ++;
-// }
+void editorRowInsertChar(int key, StateMachine *E) {
+    erow *row = &E->row[E->cy];
+    int at = E->cx;
+    if (at < 0 || at > row->size) at = row->size;
+    row->chars = realloc(row->chars, row->size + 2);
+    memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+    row->size++;
+    row->chars[at] = key;
+    editorUpdateRow(row, E);
+    E->dirty ++;
+}
 
 
 
-// void editorInsertChar(int c, OutputData *E) {
-//     if (E->cy == E->numrows) { 
-//         editorInsertRow(E->numrows,"", 0, E);
-//     }
-//     editorRowInsertChar(&E->row[E->cy], E->cx, c, E);
+int editorInsertChar(int key, StateMachine *E) {
+    if (E->cy == E->numRows) { 
+        editorInsertRow(E->numRows,"", 0, E);
+    }
+    editorRowInsertChar(key, E);
+    E->cx++;
+}
 
-//     E->cx++;
-// }
-
-// void editorInsertNewLine(OutputData *E) {
-//     if (E->cx == 0 ) {
-//         editorInsertRow(E->cy, "", 0, E);
-//     } else {
-//         erow *row = &E->row[E->cy];
-//         editorInsertRow(E->cy + 1, &row->chars[E->cx], row->size - E->cx, E);
-//         row = &E->row[E->cy];
-//         row->size = E->cx;
-//         row->chars[row->size] = '\0';
-//         editorUpdateRow(row, E);
-//     }
-//     E->cy ++;
-//     E->cx = 0;
-// }
+int editorInsertNewLine(int key, StateMachine *E) {
+    if (E->cx == 0 ) {
+        editorInsertRow(E->cy, "", 0, E);
+    } else {
+        erow *row = &E->row[E->cy];
+        editorInsertRow(E->cy + 1, &row->chars[E->cx], row->size - E->cx, E);
+        row = &E->row[E->cy];
+        row->size = E->cx;
+        row->chars[row->size] = '\0';
+        editorUpdateRow(row, E);
+    }
+    E->cy ++;
+    E->cx = 0;
+}
