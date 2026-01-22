@@ -43,5 +43,8 @@ int editorMoveCursorLastWordStart(int key, StateMachine *E);
 int doNothing(int key, StateMachine *E);
 int editorInsertNewLine(int key, StateMachine *E);
 int editorInsertChar(int key, StateMachine *E);
+int editorDelPressed(int key, StateMachine *E);
+int editorFind(int key, StateMachine *E);
+int editorSave(int key, StateMachine *E);
 
 #endif

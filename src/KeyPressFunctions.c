@@ -314,43 +314,43 @@ int editorMoveCursorLastWordStart(int key, StateMachine *E) {
 int doNothing(int key, StateMachine *E) {
     return 1;
 }
-//char *editorPrompt(char *prompt, void (*callback)(char *, int, StateMachine *), StateMachine * E) {
-//     size_t bufsize = 128;
-//     char *buf = malloc(bufsize);
-//
-//     size_t buflen =0;
-//     buf[0] = '\0';
-//
-//     while (1) {
-//         editorSetStatusMessage(E, prompt, buf);
+char *editorPrompt(char *prompt, void (*callback)(char *, int, StateMachine *), StateMachine * E) {
+     size_t bufsize = 128;
+     char *buf = malloc(bufsize);
+
+     size_t buflen =0;
+     buf[0] = '\0';
+
+     while (1) {
+         editorSetStatusMessage(E, prompt, buf);
 //         editorRefreshScreen(E);
-//
-//         int c = editorReadKey();
-//         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
-//             if (buflen != 0 ) buf[--buflen] = '\0';
-//         } else if (c== '\x1b') {
-//             editorSetStatusMessage(E, "");
-//             if (callback) callback(buf, c, E);
-//             free(buf);
-//             return NULL;
-//         } else if (c == '\r') {
-//             if (buflen != 0) {
-//                 editorSetStatusMessage(E, "");
-//                 if (callback) callback(buf, c, E);
-//                 return buf;
-//             }
-//         } else if (!iscntrl(c) && c < 128){
-//             if (buflen == bufsize -1) {
-//                 bufsize *= 2;
-//                 buf = realloc(buf, bufsize);
-//             }
-//             buf[buflen++] = c;
-//             buf[buflen] = '\0';
-//         }
-//
-//         if (callback) callback(buf, c, E);
-//     }
-//}
+
+         int c = editorReadKey();
+         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
+             if (buflen != 0 ) buf[--buflen] = '\0';
+         } else if (c== '\x1b') {
+             editorSetStatusMessage(E, "");
+             if (callback) callback(buf, c, E);
+             free(buf);
+             return NULL;
+         } else if (c == '\r') {
+             if (buflen != 0) {
+                 editorSetStatusMessage(E, "");
+                 if (callback) callback(buf, c, E);
+                 return buf;
+             }
+         } else if (!iscntrl(c) && c < 128){
+             if (buflen == bufsize -1) {
+                 bufsize *= 2;
+                 buf = realloc(buf, bufsize);
+             }
+             buf[buflen++] = c;
+             buf[buflen] = '\0';
+         }
+
+         if (callback) callback(buf, c, E);
+     }
+}
 
  int editorRowRxToCx(erow *row, int rx) {
      int cur_rx = 0;
@@ -365,165 +365,167 @@ int doNothing(int key, StateMachine *E) {
      return cx;
  }
 
-//void editorFindCallback(char * query, int key, StateMachine *E) {
-//     static int last_match = -1;
-//     static int direction = 1;
-//
-//     static int saved_hl_line;
-//     static char *saved_hl = NULL;
-//
-//     if (saved_hl) {
-//         memcpy(E->row[saved_hl_line].hl, saved_hl, E->row[saved_hl_line].rsize);
-//         free(saved_hl);
-//         saved_hl = NULL;
-//     }
-//
-//     if (key == '\r' || key == '\x1b') {
-//         last_match = -1;
-//         direction = 1;
-//         return;
-//     } else if (key == ARROW_RIGHT || key == ARROW_DOWN) {
-//         direction = 1 ;
-//     } else if (key == ARROW_LEFT || key == ARROW_UP){
-//         direction = -1;
-//     } else {
-//         last_match = -1;
-//         direction = 1;
-//     }
-//
-//     if (last_match == -1) direction = 1;
-//     int current = last_match;
-//     int i; 
-//     for (i = 0; i < E->numRows; i++) {
-//         current += direction;
-//         if (current == -1) current = E->numRows - 1;
-//         else if (current == E->numRows) current = 0;
-//
-//         erow * row = &E->row[current];
-//         char * match = strstr(row->render, query);
-//         if (match) {
-//             last_match = current;
-//             E->cy = current;
-//             E->cx = editorRowRxToCx(row,match- row->render); 
-//             E->rowOff =E->numRows;
-//
+void editorFindCallback(char * query, int key, StateMachine *E) {
+     static int last_match = -1;
+     static int direction = 1;
+
+     static int saved_hl_line;
+     static char *saved_hl = NULL;
+
+     if (saved_hl) {
+         memcpy(E->row[saved_hl_line].hl, saved_hl, E->row[saved_hl_line].rsize);
+         free(saved_hl);
+         saved_hl = NULL;
+     }
+
+     if (key == '\r' || key == '\x1b') {
+         last_match = -1;
+         direction = 1;
+         return;
+     } else if (key == ARROW_RIGHT || key == ARROW_DOWN) {
+         direction = 1 ;
+     } else if (key == ARROW_LEFT || key == ARROW_UP){
+         direction = -1;
+     } else {
+         last_match = -1;
+         direction = 1;
+     }
+
+     if (last_match == -1) direction = 1;
+     int current = last_match;
+     int i; 
+     for (i = 0; i < E->numRows; i++) {
+         current += direction;
+         if (current == -1) current = E->numRows - 1;
+         else if (current == E->numRows) current = 0;
+
+         erow * row = &E->row[current];
+         char * match = strstr(row->render, query);
+         if (match) {
+             last_match = current;
+             E->cy = current;
+             E->cx = editorRowRxToCx(row,match- row->render); 
+             E->rowOff =E->numRows;
+
 //             saved_hl_line = current;
 //             saved_hl = malloc(row->rsize);
 //             memcpy(saved_hl, row->hl, row->rsize);
 //             memset(&row->hl[match - row->render], HL_MATCH, strlen(query));
-//             break;
-//         }
-//     }
-//}
+             break;
+         }
+     }
+}
 
-//int editorFind(int key, StateMachine * E) {
-//     int saved_cx = E->cx;
-//     int saved_cy = E->cy;
-//     int saved_coloff = E->coloff;
-//     int savedcol_rowoff = E->rowOff;
-//
-//     char * query = editorPrompt("Search: %s (ESC/Arrows/Enter)", editorFindCallback, E);
-//     if (query) {
-//         free(query);
-//     } else {
-//     E->cx =      saved_cx;
-//     E->cy =      saved_cy;
-//     E->coloff =  saved_coloff;
-//     E->rowOff =  savedcol_rowoff;
-//     }
-//     return 1;
-//}
+int editorFind(int key, StateMachine * E) {
+     int saved_cx = E->cx;
+     int saved_cy = E->cy;
+     int saved_coloff = E->colOff;
+     int savedcol_rowoff = E->rowOff;
 
+     char * query = editorPrompt("Search: %s (ESC/Arrows/Enter)", editorFindCallback, E);
+     if (query) {
+         free(query);
+     } else {
+     E->cx =      saved_cx;
+     E->cy =      saved_cy;
+     E->colOff =  saved_coloff;
+     E->rowOff =  savedcol_rowoff;
+     }
+     return 1;
+}
 
+int editorSave(int key, StateMachine *E) {
+     if ( E->fileName == NULL)  {
+         E->fileName = editorPrompt("Save as: %s (ESC to cancel)", NULL, E);
+         if (E->fileName == NULL) {
+             editorSetStatusMessage(E, "Save aborted");
+             return 1;
+         }
+     }
 
+     int len; 
+     char *buf = editorRowsToString (&len, E);
 
+     int fd = open(E->fileName, O_RDWR | O_CREAT, 0644);
+     if (fd != -1) {
+         if (ftruncate(fd, len) != -1) {
+             if (write(fd,buf, len) == len) {
+                 close(fd);
+                 free(buf);
+                 E->dirty = 0;
+                 char str[33];
+                 sprintf(str,"%d bytes witten to disk", len);
+                 editorSetStatusMessage(E, str);
+                 return 1;
+             }
+         }
+         close(fd);
+     }
 
+     free(buf);
+     char str[24];
+     sprintf(str, "Can't save! I/O error: %s", strerror(errno));
+     editorSetStatusMessage(E, str);
+}
 
-//void editorSave(StateMachine *E) {
-//     if ( E->filename == NULL)  {
-//         E->filename = editorPrompt("Save as: %s (ESC to cancel)", NULL, E);
-//         if (E->filename == NULL) {
-//             editorSetStatusMessage(E, "Save aborted");
-//             return;
-//         }
-//         editorSelectSyntaxHighlight(E);
-//     }
-//
-//     int len; 
-//     char *buf = editorRowsToString (&len, E);
-//
-//     int fd = open(E->filename, O_RDWR | O_CREAT, 0644);
-//     if (fd != -1) {
-//         if (ftruncate(fd, len) != -1) {
-//             if (write(fd,buf, len) == len) {
-//                 close(fd);
-//                 free(buf);
-//                 E->dirty = 0;
-//                 char str[33];
-//                 sprintf(str,"%d bytes witten to disk", len);
-//                 editorSetStatusMessage(E, str);
-//                 return;
-//             }
-//         }
-//         close(fd);
-//     }
-//
-//     free(buf);
-//     char str[24];
-//     sprintf(str, "Can't save! I/O error: %s", strerror(errno));
-//     editorSetStatusMessage(E, str);
-//}
+void editorRowDelChar(erow * row, int at, StateMachine *E) {  
+    if (at < 0 || at > row->size) return;
+    memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
+    row->size--;
+    editorUpdateRow(row, E);
+    E->dirty ++;
+}
 
-//void editorRowDelChar(erow * row, int at, StateMachine *E) {  
-//    if (at < 0 || at > row->size) return;
-//    memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
-//    row->size--;
-//    editorUpdateRow(row, E);
-//    E->dirty ++;
-//}
-//
-//void editorRowAppendString(erow *row, char *s, size_t len, StateMachine *E) {
-//    row->chars = realloc(row->chars, row->size + len + 1);
-//    memcpy(&row->chars[row->size], s, len);
-//    row->size += len;
-//    row->chars[row->size] = '\0';
-//    editorUpdateRow(row, E);
-//    E->dirty++;
-//}
+void editorRowAppendString(erow *row, char *s, size_t len, StateMachine *E) {
+    row->chars = realloc(row->chars, row->size + len + 1);
+    memcpy(&row->chars[row->size], s, len);
+    row->size += len;
+    row->chars[row->size] = '\0';
+    editorUpdateRow(row, E);
+    E->dirty++;
+}
 
-//void editorFreeRow(erow *row) {
-//    free(row->render);
-//    free(row->chars);
-//    free(row->hl);
-//}
-//
-//void editorDelRow(int at, StateMachine *E) {
-//    if (at < 0 || at >= E->numRows) return;
-//    editorFreeRow(&E->row[at]);
-//    memmove(&E->row[at], &E->row[at + 1], sizeof(erow) * (E->numRows - at -1));
-//    for (int j = at; j < E->numRows - 1; j++) E->row[j].idx--;
-//    E->numRows--;
-//    E->dirty++;
-//}
-//
-//void editorDelChar(StateMachine *E ) {
-//    if (E->cy == E->numRows) { 
-//        return;
-//    }
-//    if (E->cx ==0 && E->cy ==0) return;
-//
-//    erow *row = &E->row[E->cy];
-//    if (E->cx > 0 ) {
-//        editorRowDelChar(row, E->cx -1, E);
-//        E->cx --;
-//    } else {
-//        E->cx = E->row[E->cy - 1].size;
-//        editorRowAppendString(&E->row[E->cy - 1], row->chars, row->size, E);
-//        editorDelRow(E->cy, E);
-//        E->cy--;
-//
-//    }
-//}
+void editorFreeRow(erow *row) {
+    free(row->render);
+    free(row->chars);
+    free(row->hl);
+}
+
+void editorDelRow(int at, StateMachine *E) {
+    if (at < 0 || at >= E->numRows) return;
+    editorFreeRow(&E->row[at]);
+    memmove(&E->row[at], &E->row[at + 1], sizeof(erow) * (E->numRows - at -1));
+    for (int j = at; j < E->numRows - 1; j++) E->row[j].idx--;
+    E->numRows--;
+    E->dirty++;
+}
+
+int editorDelChar(StateMachine *E ) {
+    if (E->cy == E->numRows) { 
+        return 1;
+    }
+    if (E->cx ==0 && E->cy ==0) return 1;
+
+    erow *row = &E->row[E->cy];
+    if (E->cx > 0 ) {
+        editorRowDelChar(row, E->cx -1, E);
+        E->cx --;
+    } else {
+        E->cx = E->row[E->cy - 1].size;
+        editorRowAppendString(&E->row[E->cy - 1], row->chars, row->size, E);
+        editorDelRow(E->cy, E);
+        E->cy--;
+
+    }
+
+    return 1;
+}
+
+int editorDelPressed(int key, StateMachine *E)
+{
+    if (key == DEL_KEY) E->cx ++;
+    editorDelChar(E);
+}
 
 void editorRowInsertChar(int key, StateMachine *E) {
     erow *row = &E->row[E->cy];

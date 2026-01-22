@@ -3,7 +3,7 @@
 
 static modeData normal = {
     .elseCallback = doNothing,
-    .keyCount = 19,
+    .keyCount = 21,
     .keys = {
         {(int)'j', editorMoveCursorDown},
         {(int)'k', editorMoveCursorUp},
@@ -24,17 +24,22 @@ static modeData normal = {
         {(int)'e', editorMoveCursorWordEnd},
         {(int)'B', editorMoveCursorLastWordStartNP},
         {(int)'b', editorMoveCursorLastWordStart},
+        {(int)'/', editorFind},
+        {CTRL_KEY('s'), editorSave},
     }
 };
 
 static modeData insert = {
     .elseCallback = editorInsertChar,
-    .keyCount = 4,
+    .keyCount = 7,
     .keys = {
         {ESC_KEY, editorToNormalMode},
         {CTRL_KEY('q'), editorQuitApp},
         {(int)'\r', editorInsertNewLine},
         {HOME_KEY, doNothing},
+        {DEL_KEY, editorDelPressed},
+        {BACKSPACE, editorDelPressed},
+        {CTRL_KEY('h'), editorDelPressed},
     }
 };
 
@@ -46,21 +51,20 @@ void editorProcessKeypress(StateMachine* E)
             for (int i = 0; i < normal.keyCount; i++) {
                 if (c == normal.keys[i].c) {
                     normal.keys[i].callback(c, E); 
-                    break;
+                    return;
                 }
-                normal.elseCallback(c,E);
             }
-
-            break;
+            normal.elseCallback(c,E);
+            return;
         case MODE_INSERT:
             for (int i = 0; i < insert.keyCount; i++) {
                 if (c == insert.keys[i].c) {
                     insert.keys[i].callback(c, E); 
-                    break;
+                    return;
                 }
             }
             insert.elseCallback(c,E);
-            break;
+            return;
     }
 }
 
@@ -121,4 +125,3 @@ void editorProcessKeypress(StateMachine* E)
 //     quit_times = QUIT_TIMES;
 // }
 
-/* init */
